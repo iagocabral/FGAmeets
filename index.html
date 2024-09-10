@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Videoconferência com WebRTC</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        video { width: 300px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Aplicação de Videoconferência</h1>
+    <input type="text" id="roomId" placeholder="ID da sala">
+    <button id="connect">Entrar na Conferência</button>
+    <button id="raise-hand">Levantar a Mão</button>
+    <button id="share-screen">Compartilhar Tela</button>
+    <div id="videos">
+        <video id="localVideo" autoplay muted></video>
+        <video id="remoteVideo" autoplay></video>
+    </div>
+    <div id="chat">
+        <h2>Chat</h2>
+        <input type="text" id="chatMessage" placeholder="Digite sua mensagem">
+        <button id="sendMessage">Enviar</button>
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        const socket = io('http://localhost:3333', { transports: ['websocket'] });
+        const localVideo = document.getElementById('localVideo');
+        const remoteVideo = document.getElementById('remoteVideo');
+        let localStream;
+        let peerConnection;
+
+        document.getElementById('connect').onclick = async () => {
+            const roomId = document.getElementById('roomId').value;
+            socket.emit('join-room', roomId);
+            await startLocalStream();
+        };
+
+        document.getElementById('raise-hand').onclick = () => {
+            const roomId = document.getElementById('roomId').value;
+            socket.emit('raise-hand', roomId);
+        };
+
+        document.getElementById('sendMessage').onclick = () => {
+            const message = document.getElementById('chatMessage').value;
+            const roomId = document.getElementById('roomId').value;
+            socket.emit('chat-message', { roomId, message });
+            document.getElementById('chatMessage').value = '';
+        };
+
+        socket.on('user-raised-hand', (userId) => {
+            alert(`Usuário ${userId} levantou a mão!`);
+        });
+
+        socket.on('user-joined', async (userId) => {
+    console.log('Novo usuário entrou na sala:', userId);
+
+    // Resetar a conexão antes de criar uma nova oferta
+    if (peerConnection) peerConnection.close(); // Feche a conexão anterior
+    createPeerConnection(); // Crie uma nova conexão
+
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    socket.emit('offer', { roomId: document.getElementById('roomId').value, offer });
+});
+
+        socket.on('chat-message', (data) => {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML += `<p><strong>${data.userId}</strong>: ${data.message}</p>`;
+        });
+
+        async function startLocalStream() {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    localVideo.srcObject = localStream;
+    createPeerConnection();
+}
+
+function createPeerConnection() {
+    peerConnection = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+    peerConnection.ontrack = (event) => {
+        remoteVideo.srcObject = event.streams[0];
+    };
+
+    peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+            socket.emit('ice-candidate', { roomId: document.getElementById('roomId').value, candidate: event.candidate });
+        }
+    };
+}
+
+socket.on('user-joined', async (userId) => {
+    console.log('Novo usuário entrou na sala:', userId);
+    if (!peerConnection) createPeerConnection(); // Inicializa a conexão se não existir
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    socket.emit('offer', { roomId: document.getElementById('roomId').value, offer });
+});
+
+socket.on('offer', async (data) => {
+    if (!peerConnection) createPeerConnection();
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    socket.emit('answer', { roomId: document.getElementById('roomId').value, answer });
+});
+
+socket.on('answer', async (data) => {
+    if (!peerConnection) createPeerConnection();
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+});
+
+socket.on('ice-candidate', async (data) => {
+    if (data && data.candidate) {
+        try {
+            const candidate = new RTCIceCandidate(data.candidate);
+            await peerConnection.addIceCandidate(candidate);
+        } catch (e) {
+            console.error('Erro ao adicionar candidato ICE:', e);
+        }
+    }
+});
+    </script>
+</body>
+</html>
