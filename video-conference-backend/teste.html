@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket Video Conference</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      video {
+        width: 300px;
+        height: 200px;
+        background: black;
+        margin: 10px;
+      }
+      .chat {
+        margin-top: 20px;
+      }
+      .chat-box {
+        border: 1px solid #ccc;
+        height: 150px;
+        overflow-y: scroll;
+        padding: 10px;
+        width: 300px;
+      }
+      .chat-input {
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Videoconferência com WebSocket</h1>
+
+    <!-- Campo para digitar a sala -->
+    <div>
+      <input type="text" id="roomIdInput" placeholder="Digite o ID da sala" />
+      <button id="joinRoomBtn">Entrar na Sala</button>
+    </div>
+
+    <!-- Área de vídeo -->
+    <div>
+      <h2>Seu Vídeo</h2>
+      <video id="localVideo" autoplay playsinline muted></video>
+      <h2>Vídeo Remoto</h2>
+      <video id="remoteVideo" autoplay playsinline></video>
+    </div>
+
+    <!-- Botão para Compartilhar Tela -->
+    <button id="shareScreenBtn">Compartilhar Tela</button>
+
+    <!-- Área de Chat -->
+    <div class="chat">
+      <h2>Chat</h2>
+      <div class="chat-box" id="chatBox"></div>
+      <div class="chat-input">
+        <input
+          type="text"
+          id="messageInput"
+          placeholder="Digite sua mensagem"
+        />
+        <button id="sendMessageBtn">Enviar Mensagem</button>
+      </div>
+    </div>
+
+    <!-- Inclusão da biblioteca socket.io -->
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+      const socket = io("http://localhost:3001", {
+        transports: ["websocket"],
+      });
+
+      const localVideo = document.getElementById("localVideo");
+      const remoteVideo = document.getElementById("remoteVideo");
+      const chatBox = document.getElementById("chatBox");
+      const messageInput = document.getElementById("messageInput");
+      const sendMessageBtn = document.getElementById("sendMessageBtn");
+      const shareScreenBtn = document.getElementById("shareScreenBtn");
+      const roomIdInput = document.getElementById("roomIdInput");
+      const joinRoomBtn = document.getElementById("joinRoomBtn");
+
+      let peerConnection;
+      let roomId;
+
+      // Entrar na sala
+      joinRoomBtn.addEventListener("click", () => {
+        roomId = roomIdInput.value;
+        socket.emit("join-room", roomId);
+        console.log(`Entrou na sala: ${roomId}`);
+        createPeerConnection();
+      });
+
+      // Iniciar vídeo local
+      async function startLocalVideo() {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+        localVideo.srcObject = stream;
+        return stream;
+      }
+
+      // Criar PeerConnection e adicionar fluxo de mídia local
+      async function createPeerConnection() {
+        peerConnection = new RTCPeerConnection({
+          iceServers: [{ urls: "stun:stun.l.google.com:19302" }], // Servidor STUN para lidar com NAT
+        });
+
+        // Capturar e enviar candidatos ICE
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate) {
+            socket.emit("ice-candidate", {
+              roomId,
+              candidate: event.candidate,
+            });
+          }
+        };
+
+        // Receber o stream remoto e exibir no vídeo remoto
+        peerConnection.ontrack = (event) => {
+          remoteVideo.srcObject = event.streams[0];
+        };
+
+        // Adicionar o stream local ao PeerConnection
+        const localStream = await startLocalVideo();
+        localStream
+          .getTracks()
+          .forEach((track) => peerConnection.addTrack(track, localStream));
+      }
+
+      // Compartilhar tela e adicionar ao PeerConnection
+      shareScreenBtn.addEventListener("click", async () => {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+        });
+
+        // Adicionar a track do compartilhamento de tela ao peerConnection
+        screenStream.getTracks().forEach((track) => {
+          peerConnection.addTrack(track, screenStream);
+        });
+
+        // Substituir o vídeo local pela tela compartilhada
+        localVideo.srcObject = screenStream;
+      });
+
+      // Enviar mensagem de chat e exibir no próprio chat
+      sendMessageBtn.addEventListener("click", () => {
+        const message = messageInput.value;
+        socket.emit("chat-message", { roomId, message }); // Envia ao servidor
+        appendMessage("Você", message); // Exibe a mensagem imediatamente no chat do remetente
+        messageInput.value = ""; // Limpa o campo de input
+      });
+
+      // Receber mensagem de chat do servidor e exibir corretamente
+      socket.on("chat-message", (data) => {
+        // Verifica se o ID do remetente é o mesmo que o do próprio cliente
+        if (data.userId !== socket.id) {
+          appendMessage(`${data.userId}`, data.message); // Exibe a mensagem com o ID do remetente
+        }
+      });
+
+      // Exibir mensagem de chat
+      function appendMessage(user, message) {
+        const newMessage = document.createElement("p");
+        newMessage.innerHTML = `<strong>${user}</strong>: ${message}`;
+        chatBox.appendChild(newMessage);
+      }
+
+      const callUser = async () => {
+        const offer = await peerConnection.createOffer();
+        await peerConnection.setLocalDescription(offer);
+        socket.emit("offer", { roomId, offer });
+      };
+
+      socket.on("offer", async (offer) => {
+        if (!peerConnection) await createPeerConnection();
+        await peerConnection.setRemoteDescription(
+          new RTCSessionDescription(offer)
+        );
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        socket.emit("answer", { roomId, answer });
+      });
+
+      socket.on("answer", async (answer) => {
+        await peerConnection.setRemoteDescription(
+          new RTCSessionDescription(answer)
+        );
+      });
+
+      // Receber candidatos ICE e adicionar ao PeerConnection
+      socket.on("ice-candidate", async (candidate) => {
+        if (peerConnection) {
+          await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        }
+      });
+    </script>
+  </body>
+</html>
