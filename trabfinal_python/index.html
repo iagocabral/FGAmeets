@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Escolha a Sala</title>
+        <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+        <!-- Inclui os arquivos de script separados -->
+        <script src="chat.js"></script>
+        <script src="video.js"></script>
+        <script>
+            var cor;
+            var localStream;
+            var localVideo = document.getElementById("localVideo");
+            var videoContainer = document.getElementById("videos");
+
+            document.addEventListener("DOMContentLoaded", async () => {
+                try {
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    const videoDevices = devices.filter(device => device.kind === "videoinput");
+                    const cameraSelect = document.getElementById("cameraSelect");
+                    videoDevices.forEach((device) => {
+                        const option = document.createElement("option");
+                        option.value = device.deviceId;
+                        option.text = device.label || `Câmera ${cameraSelect.length + 1}`;
+                        cameraSelect.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error("Erro ao listar dispositivos de câmera:", error);
+                }
+            });
+        </script>
+    </head>
+    <body>
+        <div id="telaEscolha">
+            <h1>Escolha a Sala</h1>
+            <button onclick="entrarNaSala()">Entrar na Sala</button>
+            <div id="loader" class="loader"></div>
+        </div>
+
+        <div id="telaChat">
+            <h1>Chat Room - Sala: <span id="salaNome"></span></h1>
+            <div id="chat"></div>
+            <input type="text" id="mensagem" placeholder="Digite sua mensagem..." />
+            <button id="enviar">Enviar</button>
+            <button onclick="voltarParaEscolha()">Voltar para Escolha</button>
+            <button id="levantarMaoButton" onclick="toggleMao()">Levantar a Mão</button>
+            <div id="maoIcon" style="display: none">Levantou a mao</div>
+        </div>
+
+        <div id="telaListaSalas" style="display: none">
+            <h1>Escolha a Sala</h1>
+            <ul id="listaSalas" class="salas-lista"></ul>
+            <div id="loader" class="loader"></div>
+        </div>
+
+        <div id="telaVideo" style="display: none">
+            <h1>Chat de Vídeo</h1>
+            <select id="cameraSelect" onchange="selectCamera()"></select>
+            <button onclick="startWebRTC(true)">Iniciar Chamada</button>
+            <br />
+        </div>
+        <div id="chatVideo" style="display: none">
+            <button id="muteButton" onclick="toggleMute()">Mutar</button>
+            <button id="toggleCameraButton" onclick="toggleCamera()">Desligar Câmera</button>
+            <br />
+            <video id="localVideo" autoplay muted></video>
+            <video id="remoteVideo" autoplay></video>
+        </div>
+    </body>
+</html>
