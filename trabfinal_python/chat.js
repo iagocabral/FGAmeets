@@ -225,9 +225,9 @@ function toggleMao() {
 }
 
 function toggleMute() {
-    if (!localStream) return;
+    if (!localStreamVideo) return;
 
-    const audioTracks = localStream.getAudioTracks();
+    const audioTracks = localStreamVideo.getAudioTracks();
     if (audioTracks.length === 0) return;
 
     audioTracks[0].enabled = !audioTracks[0].enabled;

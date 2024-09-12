@@ -53,20 +53,26 @@ async function shareScreen() {
         const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         const screenTrack = screenStream.getVideoTracks()[0];
 
-        // Adiciona a trilha de tela ao peerConnection
-        screenSender = peerConnection.addTrack(screenTrack, screenStream);
+        // Substituir a trilha de vídeo atual pela trilha de tela
+        const sender = peerConnection.getSenders().find(s => s.track.kind === 'video');
+        sender.replaceTrack(screenTrack);
 
-        // Exibe a tela compartilhada localmente
-        document.getElementById("screenvideo").srcObject = screenStream;
+        // Mostrar a tela localmente
+        localVideo.srcObject = screenStream;
 
-        // Adiciona a webcam de volta quando o compartilhamento de tela parar
+        // Quando o usuário parar de compartilhar a tela, restaurar a webcam
         screenTrack.onended = async () => {
             const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            cameraStream.getTracks().forEach(track => peerConnection.addTrack(track, cameraStream));
-            document.getElementById("screenvideo").srcObject = null;
-            document.getElementById("localVideo").srcObject = cameraStream;
+            const cameraTrack = cameraStream.getVideoTracks()[0];
+            sender.replaceTrack(cameraTrack);
+            localVideo.srcObject = cameraStream;
         };
     } catch (error) {
         console.error('Erro ao compartilhar tela:', error);
     }
 }
+  
+  function stopSharingScreen() {
+    // Reinicia a webcam após o compartilhamento de tela terminar
+    selectCamera();
+  }
