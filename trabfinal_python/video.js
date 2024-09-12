@@ -1,4 +1,4 @@
-var socketVideo, localVideo, remoteVideo, localStreamVideo, peerConnection;
+var socketVideo, localVideo, remoteVideo, localStreamVideo, peerConnection, screenSender;
 
 // Outras funções relacionadas a vídeo...
 async function startWebRTC(isCaller, deviceId) {
@@ -20,7 +20,16 @@ async function startWebRTC(isCaller, deviceId) {
     });
 
     peerConnection.ontrack = (event) => {
-        remoteVideo.srcObject = event.streams[0];
+        const stream = event.streams[0];
+        // Verifica se é a trilha de vídeo da câmera ou da tela
+        if (stream.getVideoTracks().length > 0) {
+            const videoTrack = stream.getVideoTracks()[0];
+            if (videoTrack.label.includes("screen")) {
+                document.getElementById("remoteScreenVideo").srcObject = stream;
+            } else {
+                remoteVideo.srcObject = stream;
+            }
+        }
     };
 
     peerConnection.onicecandidate = (event) => {
@@ -39,28 +48,25 @@ async function startWebRTC(isCaller, deviceId) {
     document.getElementById("chatVideo").style.display = "block";
 }
 
-async function selectCamera() {
-    if (localStreamVideo) {
-        localStreamVideo
-            .getTracks()
-            .forEach((track) => track.stop());
+async function shareScreen() {
+    try {
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+        const screenTrack = screenStream.getVideoTracks()[0];
+
+        // Adiciona a trilha de tela ao peerConnection
+        screenSender = peerConnection.addTrack(screenTrack, screenStream);
+
+        // Exibe a tela compartilhada localmente
+        document.getElementById("screenvideo").srcObject = screenStream;
+
+        // Adiciona a webcam de volta quando o compartilhamento de tela parar
+        screenTrack.onended = async () => {
+            const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            cameraStream.getTracks().forEach(track => peerConnection.addTrack(track, cameraStream));
+            document.getElementById("screenvideo").srcObject = null;
+            document.getElementById("localVideo").srcObject = cameraStream;
+        };
+    } catch (error) {
+        console.error('Erro ao compartilhar tela:', error);
     }
-    const cameraId = document.getElementById("cameraSelect").value;
-    localStreamVideo = await navigator.mediaDevices.getUserMedia({
-        video: { deviceId: { exact: cameraId } },
-        audio: true,
-    });
-    localVideo.srcObject = localStreamVideo;
-
-    // Atualizar as trilhas no peerConnection
-    const senders = peerConnection.getSenders();
-    localStreamVideo.getTracks().forEach((track) => {
-        const sender = senders.find(
-            (s) => s.track.kind === track.kind
-        );
-        if (sender) {
-            sender.replaceTrack(track);
-        }
-    });
 }
-
