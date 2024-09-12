@@ -17,6 +17,18 @@ body {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+#titulo {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+#imagemLogo {
+    display: block;           
+    margin-left: 0;           
+    width: 50%;               
+    height: auto;             
+}
+
 #telaChat {
     display: none;
 }
@@ -44,7 +56,7 @@ input[type="text"] {
 
 button {
     padding: 10px;
-    background-color: #4caf50; /*#4caf50*/
+    background-color: #7f86eb; /*#4caf50*/
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -52,8 +64,13 @@ button {
     margin-right: 0.4rem;
 }
 
+.container {
+    display: flex;
+    justify-content: flex-end; /* Alinha os itens ao início do contêiner (esquerda) */
+}
+
 button:hover {
-    background-color: #45a049;
+    background-color: #4e55bb;
 }
 
 .loader {

@@ -1,50 +1,57 @@
 var socket;
 let nome, salaAtual, maoLevantada = false, contadorMaosLevantadas = 0;
 
-async function entrarNaSala() {
+async function iniciarConexaoSala() { // mudei
     nome = obterNomeUsuario();
     if (!nome) return;
 
     const sala = await selecionarSala();
     if (!sala) return;
 
-    sairDaSalaAtual();
-    conectarSockets(sala);
+    finalizarConexaoSala(); // mudei
+    iniciarConexaoSockets(sala); // mudei
     configurarEventosSocket();
-    configurarInterfaceUsuario(sala);
+    modificarInterfaceSala(sala); // mudei
 }
 
 function obterNomeUsuario() {
-    const nomeUsuario = prompt("Digite seu nome:").trim();
+    const nomeUsuario = document.getElementById('nome').value;
+
     if (nomeUsuario === "") {
         alert("Por favor, preencha seu nome.");
         return null;
     }
+    
     return nomeUsuario;
 }
 
 async function selecionarSala() {
-    const escolha = prompt("Deseja entrar em uma sala existente? (S/N)").toUpperCase();
-    if (escolha === "S") {
-        return await listarSalasESelecionar();
-    } else {
+    const escolha = prompt("Deseja entrar em uma sala existente? (S/N)");
+    
+    if (escolha === "S" || escolha === "s") {
+        return await exibirSalasParaSelecao();
+    } else if (escolha === "N" || escolha === "n") {
         const nomeSala = prompt("Digite o nome da sala:").trim();
         if (nomeSala === "") {
             alert("Por favor, preencha o nome da sala.");
             return null;
         }
         return nomeSala;
+    } else {
+        alert("Opção inválida. Por favor, escolha S ou N.");
+        return null;
     }
 }
 
-function sairDaSalaAtual() {
+
+function finalizarConexaoSala() { // mjudei
     if (socket) {
         socket.send(`Saindo da sala ${salaAtual}`);
         socket.close();
     }
 }
 
-function conectarSockets(sala) {
+function iniciarConexaoSockets(sala) { // mudei
     salaAtual = sala;
     document.getElementById("loader").style.display = "inline-block";
     socket = new WebSocket(`ws://localhost:8765/${sala}`);
@@ -55,69 +62,48 @@ function configurarEventosSocket() {
     socket.onopen = () => {
         console.log("Conexão aberta");
         socket.send(`'${nome}' entrou na sala '${salaAtual}'`);
-        exibirChat(`'${nome}' entrou na sala '${salaAtual}'`, "black");
+        atualizarInterfaceParaChat(`'${nome}' entrou na sala '${salaAtual}'`, "black");
     };
 
-    socket.onmessage = (event) => processarMensagemTexto(event.data);
-    socket.onclose = () => finalizarConexaoTexto();
+    socket.onmessage = (event) => interpretarChatMensagem(event.data);
+    socket.onclose = () => encerrarSessaoTexto();
 
     socketVideo.onopen = () => console.log("WebSocket de vídeo conectado");
-    socketVideo.onmessage = async (event) => await processarMensagemVideo(event);
+    socketVideo.onmessage = async (event) => await interpretarVideoMensagem(event);
 }
 
-function processarMensagemTexto(mensagem) {
-    if (mensagem.includes("levantou a mão")) {
-        mostrarMaoIcon();
-        contadorMaosLevantadas++;
-    } else if (mensagem.includes("abaixou a mão")) {
-        esconderMaoIcon();
-        contadorMaosLevantadas--;
-    }
-    updateMaoIcon();
-    exibirMensagem(mensagem);
-}
-
-async function processarMensagemVideo(event) {
+async function interpretarVideoMensagem(event) {
     const data = JSON.parse(event.data);
     if (data.offer) await handleOffer(data.offer);
     else if (data.answer) await handleAnswer(data.answer);
     else if (data.ice) peerConnection.addIceCandidate(new RTCIceCandidate(data.ice));
 }
 
-function configurarInterfaceUsuario(sala) {
-    document.getElementById("enviar").onclick = enviarMensagem;
+function modificarInterfaceSala(sala) {
+    document.getElementById("enviar").onclick = comunicarMensagem;
     document.getElementById("salaNome").innerText = sala;
 }
 
-function exibirChat(mensagem, cor) {
+function atualizarInterfaceParaChat(mensagem) {
     document.getElementById("telaEscolha").style.display = "none";
     document.getElementById("telaChat").style.display = "block";
     document.getElementById("telaVideo").style.display = "block";
-    exibirMensagem(mensagem, cor);
+    adicionarMensagem(mensagem);
 }
 
-function enviarMensagem() {
+function comunicarMensagem() {
     const mensagem = document.getElementById("mensagem").value;
     socket.send(`${nome}: ${mensagem}`);
     document.getElementById("mensagem").value = "";
-    exibirMensagem(`Você: ${mensagem}`, "black");
+    adicionarMensagem(`Você: ${mensagem}`);
 }
 
-function exibirMensagem(mensagem, cor = "black") {
+function adicionarMensagem(mensagem) {
     const div = document.createElement("div");
     div.textContent = mensagem;
-    div.style.color = cor;
+    div.style.color = "black";
     document.getElementById("chat").appendChild(div);
 }
-
-function mostrarMaoIcon() {
-    document.getElementById("maoIcon").style.display = "inline-block";
-}
-
-function esconderMaoIcon() {
-    document.getElementById("maoIcon").style.display = "none";
-}
-
 async function handleOffer(offer) {
     await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
     const answer = await peerConnection.createAnswer();
@@ -129,16 +115,35 @@ async function handleAnswer(answer) {
     await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
 }
 
-function finalizarConexaoTexto() {
-    exibirChat(`Fim de histórico da sala ${salaAtual}`, "black");
+function encerrarSessaoTexto() {
+    atualizarInterfaceParaChat(`Fim de histórico da sala ${salaAtual}`, "black");
     socket = null;
     salaAtual = null;
     document.getElementById("loader").style.display = "none";
 }
 
+function desconectarDaSala() {
+    if (socket && salaAtual) {
+        socket.send(`${nome} saiu da sala ${salaAtual}.`);
+        socket.onclose = function () {};
+        socket.close();
+        var div = document.createElement("div");
+        div.textContent = `Fim de histórico da sala ${salaAtual}.`;
+        div.style.color = "black" || "red";
+        socket = null;
+        socketVideo = null;
+        salaAtual = null;
+        document.getElementById("chat").appendChild(div);
+        document.getElementById("loader").style.display = "none";
+    }
 
+    document.getElementById("telaEscolha").style.display = "block";
+    document.getElementById("telaChat").style.display = "none";
+    document.getElementById("telaVideo").style.display = "none";
+    document.getElementById("chatVideo").style.display = "none";
+}
 
-function listarSalasESelecionar() {
+function exibirSalasParaSelecao() {
     const socket = new WebSocket("ws://localhost:8766");
 
     const socketOpen = new Promise((resolve) => {
@@ -202,7 +207,24 @@ function listarSalasESelecionar() {
     });
 }
 
-function toggleMao() {
+function atualizarExibicaoIconeMao(estado) {
+    document.getElementById("maoIcon").style.display = estado ? "inline-block" : "none";
+}
+
+function interpretarChatMensagem(mensagem) {
+    if (mensagem.includes("levantou a mão")) {
+        atualizarExibicaoIconeMao(true);
+        contadorMaosLevantadas++;
+    } else if (mensagem.includes("abaixou a mão")) {
+        atualizarExibicaoIconeMao(true);
+        contadorMaosLevantadas--;
+    }
+    console.log("teste", nome);
+    updateMaoIcon();
+    adicionarMensagem(mensagem);
+}
+
+function trocarModoMao() {
     const nomeUsuario = nome;
     const mensagem = `${nomeUsuario} levantou a mão`;
     console.log(mensagem);
@@ -224,40 +246,6 @@ function toggleMao() {
     updateMaoIcon();
 }
 
-function toggleMute() {
-    if (!localStreamVideo) return;
-
-    const audioTracks = localStreamVideo.getAudioTracks();
-    if (audioTracks.length === 0) return;
-
-    audioTracks[0].enabled = !audioTracks[0].enabled;
-
-    const muteButton = document.getElementById("muteButton");
-    if (audioTracks[0].enabled) {
-        muteButton.textContent = "Mutar";
-    } else {
-        muteButton.textContent = "Desmutar";
-    }
-}
-
-function toggleCamera() {
-    if (!localStreamVideo) return;
-
-    const videoTracks = localStreamVideo.getVideoTracks();
-
-    if (videoTracks.length === 0) return;
-
-    videoTracks[0].enabled = !videoTracks[0].enabled;
-
-    const toggleCameraButton =
-        document.getElementById("toggleCameraButton");
-    if (videoTracks[0].enabled) {
-        toggleCameraButton.textContent = "Desligar Câmera";
-    } else {
-        toggleCameraButton.textContent = "Ligar Câmera";
-    }
-}
-
 function updateMaoIcon() {
     const maoIcon = document.getElementById("maoIcon");
     maoIcon.innerHTML = "Falar".repeat(contadorMaosLevantadas);
@@ -265,23 +253,3 @@ function updateMaoIcon() {
         contadorMaosLevantadas > 0 ? "inline-block" : "none";
 }
 
-function voltarParaEscolha() {
-    if (socket && salaAtual) {
-        socket.send(`${nome} saiu da sala ${salaAtual}.`);
-        socket.onclose = function () {};
-        socket.close();
-        var div = document.createElement("div");
-        div.textContent = `Fim de histórico da sala ${salaAtual}.`;
-        div.style.color = "black" || "red";
-        socket = null;
-        socketVideo = null;
-        salaAtual = null;
-        document.getElementById("chat").appendChild(div);
-        document.getElementById("loader").style.display = "none";
-    }
-
-    document.getElementById("telaEscolha").style.display = "block";
-    document.getElementById("telaChat").style.display = "none";
-    document.getElementById("telaVideo").style.display = "none";
-    document.getElementById("chatVideo").style.display = "none";
-}

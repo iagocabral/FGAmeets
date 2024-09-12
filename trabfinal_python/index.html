@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Escolha a Sala</title>
+
+        <title>FGATeams</title>
+        <link rel="icon" href="https://cdn.icon-icons.com/icons2/2248/PNG/512/microsoft_teams_icon_137398.png" type="image/x-icon">
         <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
         <!-- Inclui os arquivos de script separados -->
         <script src="chat.js"></script>
         <script src="video.js"></script>
         <script>
-            var cor;
             var localStream;
             var localVideo = document.getElementById("localVideo");
             var videoContainer = document.getElementById("videos");
@@ -30,9 +31,18 @@
         </script>
     </head>
     <body>
-        <div id="telaEscolha">
-            <h1>Escolha a Sala</h1>
-            <button onclick="entrarNaSala()">Entrar na Sala</button>
+        <div id="telaEscolha" style="display:block">
+
+            <div id="titulo">
+                <img id="imagemLogo" src="https://cdn.discordapp.com/attachments/805795785219506287/1283871787330965595/logo.png?ex=66e49247&is=66e340c7&hm=b8901d75bf0ffa12a3083843160eb961f8a2b8d21d2c5425654f58a61503f49d&" alt="Logo"/>
+                <b>Bem-Vindo ao FGATeams</b>
+            </div>
+
+
+                <input type="text" id="nome" name="nome" placeholder="Digite seu nome"/>
+                <div class="container">
+                    <button onclick="iniciarConexaoSala()" >Começar</button>
+                </div>
             <div id="loader" class="loader"></div>
         </div>
 
@@ -41,8 +51,8 @@
             <div id="chat"></div>
             <input type="text" id="mensagem" placeholder="Digite sua mensagem..." />
             <button id="enviar">Enviar</button>
-            <button onclick="voltarParaEscolha()">Voltar para Escolha</button>
-            <button id="levantarMaoButton" onclick="toggleMao()">Levantar a Mão</button>
+            <button onclick="voltarParaOpcao()">Voltar para Escolha</button>
+            <button id="levantarMaoButton" onclick="trocarModoMao()">Levantar a Mão</button>
             <div id="maoIcon" style="display: none">Levantou a mao</div>
         </div>
 
@@ -55,12 +65,12 @@
         <div id="telaVideo" style="display: none">
             <h1>Chat de Vídeo</h1>
             <select id="cameraSelect" onchange="selectCamera()"></select>
-            <button onclick="startWebRTC(true)">Iniciar Chamada</button>
+            <button onclick="inicializarWebRTC(true)">Iniciar Chamada</button>
             <br />
         </div>
         <div id="chatVideo" style="display: none">
-            <button id="muteButton" onclick="toggleMute()">Mutar</button>
-            <button id="toggleCameraButton" onclick="toggleCamera()">Desligar Câmera</button>
+            <button id="muteButton" onclick="changeAudio()">Mutar</button>
+            <button id="toggleCameraButton" onclick="changeCamera()">Desligar Câmera</button>
             <button onclick="shareScreen()">Compartilhar Tela</button>
             <br />
             <video id="localVideo" autoplay muted></video>

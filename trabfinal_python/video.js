@@ -1,7 +1,7 @@
 var socketVideo, localVideo, remoteVideo, localStreamVideo, peerConnection, screenSender;
 
 // Outras funções relacionadas a vídeo...
-async function startWebRTC(isCaller, deviceId) {
+async function inicializarWebRTC(isCaller, deviceId) {
     localVideo = document.getElementById("localVideo");
     remoteVideo = document.getElementById("remoteVideo");
 
@@ -46,6 +46,40 @@ async function startWebRTC(isCaller, deviceId) {
         socketVideo.send(JSON.stringify({ offer: offer }));
     }
     document.getElementById("chatVideo").style.display = "block";
+}
+
+function changeAudio() {
+    if (!localStreamVideo) return;
+
+    const audioTracks = localStreamVideo.getAudioTracks();
+    if (audioTracks.length === 0) return;
+
+    audioTracks[0].enabled = !audioTracks[0].enabled;
+
+    const muteButton = document.getElementById("muteButton");
+    if (audioTracks[0].enabled) {
+        muteButton.textContent = "Mutar";
+    } else {
+        muteButton.textContent = "Desmutar";
+    }
+}
+
+function changeCamera() {
+    if (!localStreamVideo) return;
+
+    const videoTracks = localStreamVideo.getVideoTracks();
+
+    if (videoTracks.length === 0) return;
+
+    videoTracks[0].enabled = !videoTracks[0].enabled;
+
+    const toggleCameraButton =
+        document.getElementById("toggleCameraButton");
+    if (videoTracks[0].enabled) {
+        toggleCameraButton.textContent = "Desligar Câmera";
+    } else {
+        toggleCameraButton.textContent = "Ligar Câmera";
+    }
 }
 
 async function shareScreen() {
