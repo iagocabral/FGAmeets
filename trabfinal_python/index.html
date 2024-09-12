@@ -37,24 +37,41 @@
                 <img id="imagemLogo" src="https://cdn.discordapp.com/attachments/805795785219506287/1283871787330965595/logo.png?ex=66e49247&is=66e340c7&hm=b8901d75bf0ffa12a3083843160eb961f8a2b8d21d2c5425654f58a61503f49d&" alt="Logo"/>
                 <b>Bem-Vindo ao FGATeams</b>
             </div>
-
-
+                
                 <input type="text" id="nome" name="nome" placeholder="Digite seu nome"/>
                 <div class="container">
-                    <button onclick="iniciarConexaoSala()" >Começar</button>
+                    <button onclick="start()" >Começar</button>
                 </div>
             <div id="loader" class="loader"></div>
         </div>
 
-        <div id="telaChat">
-            <h1>Chat Room - Sala: <span id="salaNome"></span></h1>
-            <div id="chat"></div>
-            <input type="text" id="mensagem" placeholder="Digite sua mensagem..." />
-            <button id="enviar">Enviar</button>
-            <button onclick="voltarParaOpcao()">Voltar para Escolha</button>
-            <button id="levantarMaoButton" onclick="trocarModoMao()">Levantar a Mão</button>
-            <div id="maoIcon" style="display: none">Levantou a mao</div>
+        <div id="telaChat" style="display:none">
+
+                <label id="confirmaLabel">Deseja entrar em uma sala existente?</label>
+                <div class="container" id="confirma">
+                    <button class="botao sim" onclick="showSalas()">Sim</button>
+                    <button class="botao nao" onclick="createSala()">Não</button>
+                </div>
+                <div id="criaSala" style="display:none">
+                    <input type="text" id="nomesala" name="nomesala" placeholder="Digite o nome da sala que deseja criar"/>
+                    <div class="container">
+                        <button onclick="iniciarConexaoSala()" >Criar</button>
+                    </div>
+                </div>
+                <div id="telaChats" style="display:none">
+                    <h1>Chat Room - Sala: <span id="salaNome"></span></h1>
+                    <div id="chat"></div>
+                    <input type="text" id="mensagem" placeholder="Digite sua mensagem..." />
+                    <button id="enviar">Enviar</button>
+                    <button onclick="voltarParaOpcao()">Voltar para Escolha</button>
+                    <button id="levantarMaoButton" onclick="trocarModoMao()">Levantar a Mão</button>
+                    <div id="maoIcon" style="display: none">Levantou a mao</div><br>
+                    <div id="maoIcon1" style="display: none">Levantou a mao</div>
+                </div>
+            <div id="loader" class="loader"></div>
         </div>
+
+        
 
         <div id="telaListaSalas" style="display: none">
             <h1>Escolha a Sala</h1>
