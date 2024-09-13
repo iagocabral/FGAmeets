@@ -249,35 +249,34 @@ function exibirSalasParaSelecao() {
 }
 
 function atualizarExibicaoIconeMao(estado) {
-  document.getElementById("maoIcon").style.display = estado
-    ? "inline-block"
-    : "none";
+    document.getElementById("maoIcon1").style.display = estado ? "inline-block" : "none";
 }
 
 function interpretarChatMensagem(mensagem) {
-  const regex = /(.*) (levantou a mão)/;
-  const regex2 = /(.*) (abaixou a mão)/;
-  const match = mensagem.match(regex);
-  const maoIcon1 = document.getElementById("maoIcon1");
+    const regex = /(.*) (levantou a mão)/;
+    const regex2 = /(.*) (abaixou a mão)/;
+    const match = mensagem.match(regex);
+    const match2 = mensagem.match(regex2)
+    const maoIcon1 = document.getElementById("maoIcon1");
 
-  if (mensagem.match(regex)) {
-    name = match[1];
-    maoIcon1.innerHTML = `${name} quer falar`;
-  }
+    if(mensagem.match(regex)){
+        name = match[1];
+        maoIcon1.innerHTML = `🖐️ ${name} quer falar`;
+    }
+    
+    if(mensagem.match(regex2)){
+        maoIcon1.innerHTML = "";
+    }
 
-  if (mensagem.match(regex2)) {
-    maoIcon1.innerHTML = "";
-  }
-
-  if (mensagem.includes("levantou a mão")) {
-    atualizarExibicaoIconeMao(true);
-    contadorMaosLevantadas++;
-  } else if (mensagem.includes("abaixou a mão")) {
-    atualizarExibicaoIconeMao(false);
-    contadorMaosLevantadas--;
-  }
-  updateMaoIcon(name);
-  adicionarMensagem(mensagem);
+    if (mensagem.includes("levantou a mão")) {
+        console.log("teste nome lenvatou", name)
+        atualizarExibicaoIconeMao(true);
+    } else if (mensagem.includes("abaixou a mão")) {
+        console.log("teste nome abaixou", name)
+        atualizarExibicaoIconeMao(false);
+    }
+    updateMaoIcon(name);
+    adicionarMensagem(mensagem);
 }
 
 function trocarModoMao() {
@@ -302,13 +301,15 @@ function trocarModoMao() {
 }
 
 function updateMaoIcon(nombre) {
-  const filterName = nombre;
-  const maoIcon = document.getElementById("maoIcon");
-  const maoIcon1 = document.getElementById("maoIcon1");
+    const filterName = nombre;
 
-  if (filterName == null) {
-    maoIcon.innerHTML = `${nome} quer falar`;
-    maoIcon.style.display = !maoIcon.style.display;
-    contadorMaosLevantadas > 0 ? "inline-block" : "none";
-  }
+    if (filterName == null){
+    const maoIcon = document.getElementById("maoIcon");
+    maoIcon.innerHTML = `🖐️ ${nome} quer falar`;
+    maoIcon.style.display =
+        contadorMaosLevantadas > 0 ? "inline-block" : "none";
+    }
 }
+
+
+
