@@ -3,8 +3,11 @@ body {
     background-color: #f2f2f2;
     margin: 0;
     padding: 0;
+    /* display: flex;
+    flex-direction: row-reverse; */
 }
 
+#telaConv,
 #telaEscolha,
 #telaListaSalas,
 #telaChat {
@@ -17,16 +20,21 @@ body {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+#containerChatEVideo {
+    display: flex;
+    flex-direction: row-reverse;
+}
+
 #titulo {
     display: flex;
-    align-items: center;
-    gap: 5px;
+    gap: 16vh;
+    padding-bottom: 30px;
 }
 
 #imagemLogo {
     display: block;
     margin-left: 0;
-    width: 50%;
+    width: 10%;
     height: auto;
 }
 
@@ -160,17 +168,47 @@ button:hover {
 video {
     width: 100%;
     height: auto;
-    border: 1px solid #ccc;
     border-radius: 5px;
     margin-bottom: 10px;
 }
 
+#containerGlobalVideos {
+    width: 50%;
+    margin: 20px auto;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
 #localVideo {
-    width: 30%;
+    width: 40%;
     height: auto;
-    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+#remoteVideo {
+    width: 40%;
+    height: auto;
     border-radius: 5px;
     margin-bottom: 10px;
+}
+
+#containerChatVideos {
+    display: flex;
+    flex-direction: column;
+
+    &>#containerVideos {
+        display: flex;
+        flex-direction: row;
+    }
+
+    &>#containerBotoesVideo {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+    }
 }
 
 .salas-lista {

@@ -8,8 +8,6 @@ let name,
   create = 0;
 
 async function iniciarConexaoSala() {
-  // mudei
-
   document.getElementById("criaSala").style.display = "none";
   nome = obterNomeUsuario();
   if (create == 0) {
@@ -19,10 +17,10 @@ async function iniciarConexaoSala() {
     if (!sala) return;
   }
   console.log(sala);
-  finalizarConexaoSala(); // mudei
-  iniciarConexaoSockets(sala); // mudei
+  finalizarConexaoSala();
+  iniciarConexaoSockets(sala);
   configurarEventosSocket();
-  modificarInterfaceSala(sala); // mudei
+  modificarInterfaceSala(sala);
 }
 
 function obterNomeUsuario() {
@@ -84,7 +82,6 @@ async function selecionarSala() {
 }
 
 function finalizarConexaoSala() {
-  // mjudei
   if (socket) {
     socket.send(`Saindo da sala ${salaAtual}`);
     socket.close();
@@ -95,8 +92,8 @@ function iniciarConexaoSockets(sala) {
   // mudei
   salaAtual = sala;
   document.getElementById("loader").style.display = "inline-block";
-  socket = new WebSocket(`ws://localhost:8765/${sala}`);
-  socketVideo = new WebSocket(`ws://localhost:8767/${sala}`);
+  socket = new WebSocket(`ws://localhost:3333/${sala}`);
+  socketVideo = new WebSocket(`ws://localhost:3335/${sala}`);
 }
 
 function configurarEventosSocket() {
@@ -194,7 +191,7 @@ function desconectarDaSala() {
 }
 
 function exibirSalasParaSelecao() {
-  const socket = new WebSocket("ws://localhost:8766");
+  const socket = new WebSocket("ws://localhost:3334");
 
   const socketOpen = new Promise((resolve) => {
     socket.onopen = () => resolve();
@@ -213,17 +210,6 @@ function exibirSalasParaSelecao() {
       const telaListaSalas = document.getElementById("telaListaSalas");
       const backButton = document.getElementById("backButton");
 
-      if (!backButton) {
-        const newBackButton = document.createElement("button");
-        newBackButton.textContent = "Voltar";
-        newBackButton.id = "backButton";
-        newBackButton.addEventListener("click", () => {
-          telaListaSalas.style.display = "none";
-          document.getElementById("telaEscolha").style.display = "block";
-        });
-        telaListaSalas.appendChild(newBackButton);
-      }
-
       salasDisponiveis.forEach((salaList) => {
         const listItem = document.createElement("li");
         listItem.textContent = salaList;
@@ -232,7 +218,8 @@ function exibirSalasParaSelecao() {
           socket.close();
           resolve(salaList);
           document.getElementById("telaListaSalas").style.display = "none";
-
+          document.getElementById("confirma").style.display = "none";
+          document.getElementById("confirmaLabel").style.display = "none";
           document.getElementById("telaEscolha").style.display = "block";
           sala = salaList;
           iniciarConexaoSala();
@@ -249,34 +236,36 @@ function exibirSalasParaSelecao() {
 }
 
 function atualizarExibicaoIconeMao(estado) {
-    document.getElementById("maoIcon1").style.display = estado ? "inline-block" : "none";
+  document.getElementById("maoIcon1").style.display = estado
+    ? "inline-block"
+    : "none";
 }
 
 function interpretarChatMensagem(mensagem) {
-    const regex = /(.*) (levantou a mão)/;
-    const regex2 = /(.*) (abaixou a mão)/;
-    const match = mensagem.match(regex);
-    const match2 = mensagem.match(regex2)
-    const maoIcon1 = document.getElementById("maoIcon1");
+  const regex = /(.*) (levantou a mão)/;
+  const regex2 = /(.*) (abaixou a mão)/;
+  const match = mensagem.match(regex);
+  const match2 = mensagem.match(regex2);
+  const maoIcon1 = document.getElementById("maoIcon1");
 
-    if(mensagem.match(regex)){
-        name = match[1];
-        maoIcon1.innerHTML = `🖐️ ${name} quer falar`;
-    }
-    
-    if(mensagem.match(regex2)){
-        maoIcon1.innerHTML = "";
-    }
+  if (mensagem.match(regex)) {
+    name = match[1];
+    maoIcon1.innerHTML = `🖐️ ${name} quer falar`;
+  }
 
-    if (mensagem.includes("levantou a mão")) {
-        console.log("teste nome lenvatou", name)
-        atualizarExibicaoIconeMao(true);
-    } else if (mensagem.includes("abaixou a mão")) {
-        console.log("teste nome abaixou", name)
-        atualizarExibicaoIconeMao(false);
-    }
-    updateMaoIcon(name);
-    adicionarMensagem(mensagem);
+  if (mensagem.match(regex2)) {
+    maoIcon1.innerHTML = "";
+  }
+
+  if (mensagem.includes("levantou a mão")) {
+    console.log("teste nome lenvatou", name);
+    atualizarExibicaoIconeMao(true);
+  } else if (mensagem.includes("abaixou a mão")) {
+    console.log("teste nome abaixou", name);
+    atualizarExibicaoIconeMao(false);
+  }
+  updateMaoIcon(name);
+  adicionarMensagem(mensagem);
 }
 
 function trocarModoMao() {
@@ -289,11 +278,13 @@ function trocarModoMao() {
   if (!maoLevantada) {
     maoLevantada = true;
     levantarMaoButton.style.backgroundColor = "purple";
+    levantarMaoButton.innerHTML = "Abaixar mão";
     socket.send(mensagem);
     contadorMaosLevantadas++;
   } else {
     maoLevantada = false;
     levantarMaoButton.style.backgroundColor = "";
+    levantarMaoButton.innerHTML = "Levantar mão";
     socket.send(`${nomeUsuario} abaixou a mão`);
     contadorMaosLevantadas--;
   }
@@ -301,15 +292,12 @@ function trocarModoMao() {
 }
 
 function updateMaoIcon(nombre) {
-    const filterName = nombre;
+  const filterName = nombre;
 
-    if (filterName == null){
+  if (filterName == null) {
     const maoIcon = document.getElementById("maoIcon");
     maoIcon.innerHTML = `🖐️ ${nome} quer falar`;
     maoIcon.style.display =
-        contadorMaosLevantadas > 0 ? "inline-block" : "none";
-    }
+      contadorMaosLevantadas > 0 ? "inline-block" : "none";
+  }
 }
-
-
-

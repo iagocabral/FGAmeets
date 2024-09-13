@@ -40,7 +40,7 @@
       <div id="titulo">
         <img
           id="imagemLogo"
-          src="https://cdn.discordapp.com/attachments/805795785219506287/1283871787330965595/logo.png?ex=66e49247&is=66e340c7&hm=b8901d75bf0ffa12a3083843160eb961f8a2b8d21d2c5425654f58a61503f49d&"
+          src="https://media.discordapp.net/attachments/805795785219506287/1283951397842321520/Novo_Projeto_5.png?ex=66e4dc6b&is=66e38aeb&hm=8145f2470ed0a8bc13963e7194221620daf27e68d1432951ddba2773e23e59d0&=&format=webp&quality=lossless&width=636&height=473"
           alt="Logo"
         />
         <b>Bem-Vindo ao FGATeams</b>
@@ -70,6 +70,13 @@
           <button onclick="iniciarConexaoSala()">Criar</button>
         </div>
       </div>
+
+      <div id="telaListaSalas" style="display: none">
+        <h1>Escolha a Sala</h1>
+        <ul id="listaSalas" class="salas-lista"></ul>
+        <div id="loader" class="loader"></div>
+      </div>
+
       <div id="telaChats" style="display: none">
         <div id="tituloChat">
           <div>Chat de mensagens</div>
@@ -82,8 +89,11 @@
         <div id="chat"></div>
         <input type="text" id="mensagem" placeholder="Digite sua mensagem..." />
         <div id="containerBotoesChat">
-          <button id="enviar">Enviar</button>
-          <button onclick="voltarParaOpcao()">Voltar para Escolha</button>
+          <button id="enviar">
+            <img
+              src="https://media.discordapp.net/attachments/805795785219506287/1283959233779470377/icons8-send-24_1.png?ex=66e4e3b8&is=66e39238&hm=f3f3bdde6be4b1c674eee0456df85b489ed198fb313c964ad9c12e4ab9330863&=&format=webp&quality=lossless"
+            />
+          </button>
           <button id="levantarMaoButton" onclick="trocarModoMao()">
             Levantar a Mão
           </button>
@@ -95,27 +105,35 @@
       <div id="loader" class="loader"></div>
     </div>
 
-    <div id="telaListaSalas" style="display: none">
-      <h1>Escolha a Sala</h1>
-      <ul id="listaSalas" class="salas-lista"></ul>
-      <div id="loader" class="loader"></div>
-    </div>
-
-    <div id="telaVideo" style="display: none">
-      <h1>Chat de Vídeo</h1>
-      <select id="cameraSelect" onchange="selectCamera()"></select>
-      <button onclick="inicializarWebRTC(true)">Iniciar Chamada</button>
-      <br />
-    </div>
-    <div id="chatVideo" style="display: none">
-      <button id="muteButton" onclick="changeAudio()">Mutar</button>
-      <button id="toggleCameraButton" onclick="changeCamera()">
-        Desligar Câmera
-      </button>
-      <button onclick="shareScreen()">Compartilhar Tela</button>
-      <br />
-      <video id="localVideo" autoplay muted></video>
-      <video id="remoteVideo" autoplay></video>
+    <div id="containerGlobalVideos">
+      <div id="telaVideo" style="display: none">
+        <h1>Chat de vídeo</h1>
+        <select id="cameraSelect"></select>
+        <button onclick="inicializarWebRTC(true)">Ligar Camara</button>
+        <button onclick="toggleCamera()">Desligar camera</button>
+        <br />
+      </div>
+      <div id="chatVideo" style="display: none">
+        <div id="containerChatVideos">
+          <div id="containerVideos">
+            <video id="localVideo" autoplay muted></video>
+            <video id="remoteVideo" autoplay></video>
+          </div>
+          <div id="containerBotoesVideo">
+            <button id="muteButton" onclick="changeAudio()">
+              <img
+                id="iconMute"
+                style="max-height: 20px"
+                src="https://media.discordapp.net/attachments/805795785219506287/1283956104367308892/icons8-muted-25.png?ex=66e4e0ce&is=66e38f4e&hm=77c739faa9a2b5c22dddace3ac55f33347cfa45d8b2b84a851af3e7e19d1d44f&=&format=webp&quality=lossless"
+              />
+            </button>
+            <button onclick="shareScreen()">Compartilhar Tela</button>
+            <button id="toggleCameraButton" onclick="changeCamera()">
+              Alterar Camera
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </body>
 </html>
