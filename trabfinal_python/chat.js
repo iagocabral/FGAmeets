@@ -142,14 +142,17 @@ function comunicarMensagem() {
   const mensagem = document.getElementById("mensagem").value;
   socket.send(`${nome}: ${mensagem}`);
   document.getElementById("mensagem").value = "";
-  adicionarMensagem(`Você: ${mensagem}`);
+  adicionarMensagem(`Você: ${mensagem}`, true);
 }
 
-function adicionarMensagem(mensagem) {
+function adicionarMensagem(mensagem, enviadaPorMim = false) {
   const div = document.createElement("div");
   div.textContent = mensagem;
   div.style.color = "black";
-  document.getElementById("chat").appendChild(div);
+  div.className = enviadaPorMim ? "mensagem-enviada" : "mensagem-recebida";
+  const chatDiv = document.getElementById("chat");
+  chatDiv.appendChild(div);
+  chatDiv.scrollTop = chatDiv.scrollHeight;
 }
 async function handleOffer(offer) {
   await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));

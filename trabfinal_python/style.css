@@ -22,11 +22,12 @@ body {
     align-items: center;
     gap: 5px;
 }
+
 #imagemLogo {
-    display: block;           
-    margin-left: 0;           
-    width: 50%;               
-    height: auto;             
+    display: block;
+    margin-left: 0;
+    width: 50%;
+    height: auto;
 }
 
 #telaChat {
@@ -37,13 +38,67 @@ h1 {
     color: #333;
 }
 
+#tituloChat {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    margin-bottom: 20px;
+
+    &>div {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #333;
+    }
+
+}
+
+#containerSalaNome {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+
+    &>#salaNome,
+    div {
+        font-size: 1.1rem;
+        color: #555;
+    }
+
+    &>div {
+        margin-right: 5px;
+    }
+}
+
+
 #chat {
     max-height: 300px;
-    overflow-y: auto;
+    height: 150px;
     margin-bottom: 10px;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
+    overflow-y: scroll;
+    scrollbar-width: thin;
+}
+
+.mensagem-recebida,
+.mensagem-enviada {
+    padding: 5px;
+    border-radius: 5px;
+    margin: 5px 0;
+    word-wrap: break-word;
+}
+
+.mensagem-enviada {
+    text-align: right;
+    background-color: #e1ffc7;
+
+}
+
+.mensagem-recebida {
+    text-align: left;
+    background-color: #f1f1f1;
 }
 
 input[type="text"] {
@@ -56,7 +111,8 @@ input[type="text"] {
 
 button {
     padding: 10px;
-    background-color: #7f86eb; /*#4caf50*/
+    background-color: #7f86eb;
+    /*#4caf50*/
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -64,9 +120,16 @@ button {
     margin-right: 0.4rem;
 }
 
+#containerBotoesChat {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
 .container {
     display: flex;
-    justify-content: flex-end; /* Alinha os itens ao início do contêiner (esquerda) */
+    justify-content: flex-end;
+    /* Alinha os itens ao início do contêiner (esquerda) */
 }
 
 button:hover {
